@@ -1,0 +1,53 @@
+public class BatchapexMarketCS implements database.batchable<sobject>,database.stateful 
+{
+    //Writing Soql in Start method to get all the Store__c records 
+    public database.QueryLocator Start(Database.batchableContext ABC)
+    {
+        return database.getQueryLocator([select id,Market_Code__c,Zone_Code__c, Market__c, Zone__c from Store__c where Market__c = null OR Zone__c = null]);     
+    }
+    
+    //Creating a map for Market & Zone objects
+    //Creating a sets to store all the zone name, Market name field values in zone & Market obj as seperate 
+    
+    Public void execute (Database.batchableContext ABC , List<Store__c> Scope)
+    {   
+        user reczoneleader = [select id , name from user where name like '%Pravin%' ];
+        Map<id, Market__c> MarketMap = new map<Id, Market__c>([ Select ID,Name ,
+                                                               External_ID__c, SW_Zone__c, Market_Manager__c, Market_Name__c,Market_Description__c
+                                                               from Market__c ]);
+        
+        Map<id,Zone__c> ZoneMap = new Map<id,Zone__c>([Select ID, Name,
+                                                       SW_Zone_Name__c, Zone_leader__c, Zone_Description__c 
+                                                       from Zone__c ]);
+        list<Zone__c> Zonelst = new list<Zone__c>();
+        list<Market__c> Marketlst = new List <Market__c>();
+        
+        for(Store__c Storerec : Scope)
+        {
+            for(id Marketrecid : marketMap.keyset())
+            {
+                if(Marketmap.get(Marketrecid).Market_Name__c == Storerec.Market_Code__c)
+                {
+                    Storerec.Market__c = Marketmap.get(Marketrecid).id ;
+                }
+            }
+            if(Storerec.market__c==null)
+            {
+                Market__c Marketrec = New Market__c ( Market_Name__c = Storerec.Market_Code__c ,
+                                                     SW_Zone__c = Storerec.Zone_Code__c , External_Id__c = Storerec.Market_Code__c);
+                
+                Marketlst.add(Marketrec);
+            }  
+        }
+        Insert Marketlst;
+        update scope;
+        
+    }
+    
+    Public void Finish (Database.batchableContext ABC)
+    {
+        system.enqueueJob(New QueueableBatchApexCSMarket());
+        Database.executeBatch(New BatchApexZoneCS());
+    }
+    
+}
