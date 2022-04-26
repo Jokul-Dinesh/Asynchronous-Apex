@@ -1,0 +1,24 @@
+public class QueueableBatchApexCSMarket implements Queueable
+{
+    Public void Execute(QueueableContext ABC)
+    {
+        Map<id, Market__c> MarketMap = new map<Id, Market__c>([ Select ID,Name ,
+                             
+                                                               External_ID__c, SW_Zone__c, Market_Manager__c, Market_Name__c,Market_Description__c
+                                                               from Market__c ]);
+        
+        list<Store__c> Storelst = [select id,Market_Code__c,Zone_Code__c,Zone__c,Market__c from Store__c where Market__c = null OR Zone__c = null];
+        
+        for(Store__c Storerec : Storelst)
+        {
+            for(Id Marketrecid : MarketMap.keyset())
+            {
+                if ( MarketMap.get(Marketrecid).Market_Name__c == Storerec.Market_Code__c)
+                {
+                    Storerec.Market__c = Marketrecid ;
+                }
+            }
+        }       
+        update Storelst;
+    }
+}
