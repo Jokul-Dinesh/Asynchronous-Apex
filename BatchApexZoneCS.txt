@@ -1,0 +1,55 @@
+public class BatchApexZoneCS implements Database.Batchable <Sobject> , Database.stateful
+{
+    integer RecCount=0;
+    integer badgeCount=0;
+    public database.QueryLocator Start(Database.batchableContext ABC)
+    {
+        return database.getQueryLocator([select id,Market_Code__c,Zone_Code__c, Market__c, Zone__c 
+                                         from Store__c where Market__c = null OR Zone__c = null]);     
+    }
+    
+    //Creating a map for Market & Zone objects
+    //Creating a sets to store all the zone name, Market name field values in zone & Market obj as seperate 
+    
+    Public void execute (Database.batchableContext ABC , List<Store__c> Scope)
+    {   
+        user reczoneleader = [select id , name from user where name like '%Pravin%' ];        
+        Map<id,Zone__c> ZoneMap = new Map<id,Zone__c>([Select ID, Name,
+                                                       SW_Zone_Name__c, Zone_leader__c, Zone_Description__c 
+                                                       from Zone__c ]);
+        list<Zone__c> Zonelst = new list<Zone__c>();        
+        for(Store__c Storerec : Scope)
+        {
+            for(id Zonerecid : ZoneMap.keyset())
+            {
+                if(Zonemap.get(Zonerecid).SW_Zone_Name__c == Storerec.Zone_Code__c)
+                {
+                    Storerec.Zone__c = ZoneMap.get(Zonerecid).id ;
+                }
+                
+            }
+            if(Storerec.Zone__c==null)   
+            {
+                Zone__c Zoneobj = new Zone__c(SW_Zone_Name__c = Storerec.Zone_Code__c);
+                Zonelst.add(Zoneobj);
+            }
+            RecCount+=1;
+            
+        }
+        system.debug(Zonelst.size());
+        insert Zonelst;
+        update scope;
+        badgeCount+=1;
+        
+    }
+    
+    
+    
+    Public void Finish (Database.batchableContext ABC)
+    {
+        system.enqueueJob(New QueueableBatchApexCSZone());
+        system.debug('Badge Count = '+badgeCount);
+        system.debug('Number of proccess = '+RecCount);
+    }
+    
+}
