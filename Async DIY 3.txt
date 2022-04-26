@@ -1,0 +1,24 @@
+public class Queueabledemo implements Queueable{
+    
+    Public void execute(QueueableContext Ctx)
+    {
+        //List <Contact> Conlst = [Select ID, Name from Contact where createdDate = LAST_YEAR];
+        //system.debug(Conlst.size());
+        delete [Select ID, Name from Contact where createdDate = LAST_YEAR];
+        system.enqueueJob(New queueabledemo1());
+    }
+
+}
+
+
+
+public class Queueabledemo1 Implements Queueable 
+{
+    Public void execute (QueueableContext ctx)  
+    {
+        //List<Account> Acclst = [Select ID ,Name from account where CreatedDate = LAST_YEAR ];
+        //system.debug(acclst.size());
+        delete[Select ID ,Name from account where CreatedDate = LAST_YEAR ];
+    }
+
+}
