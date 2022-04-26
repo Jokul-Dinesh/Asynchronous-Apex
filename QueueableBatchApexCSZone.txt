@@ -1,0 +1,25 @@
+public class QueueableBatchApexCSZone implements Queueable
+{
+    Public void Execute(QueueableContext ABC)
+    {
+        Map<id,Zone__c> ZoneMap = new Map<id,Zone__c>([Select ID, Name,
+                                                       SW_Zone_Name__c, Zone_leader__c, Zone_Description__c 
+                                                       from Zone__c ]); 
+        
+        list<Store__c> Storelst = [select id,Market_Code__c,Zone_Code__c,Zone__c,Market__c from Store__c 
+                                   where Market__c = null OR Zone__c = null];
+        
+        for(Store__c Storerec : Storelst)
+        {
+            for(Id Zonerecid : ZoneMap.keyset())
+            {
+                if ( ZoneMap.get(Zonerecid).SW_Zone_Name__c == Storerec.Zone_Code__c)
+                {
+                    Storerec.Zone__c = Zonerecid ;
+                }
+            }
+        }
+        
+        update Storelst;
+    }
+}
