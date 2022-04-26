@@ -1,0 +1,30 @@
+	public class Scheduledemo_AsyncDIY5 implements  schedulable{
+    public void  execute (SchedulableContext ABC){
+        //System.debug('Hello World');	
+        list<lead> leadlst = new List<Lead>([select id , CreatedDate, Status from Lead]);
+        integer Count = 0;
+        for(Lead Leadrec : Leadlst)
+        {
+            
+            if(Leadrec.CreatedDate==Date.today() &&	Leadrec.status == 'Not contacted')
+            {
+               Count += 1; 
+            }
+        }
+        
+        String Plaintxt ;
+        if(Count>0)
+        {
+            Plaintxt = 'Today '+count+' leads have created and still Not contacted';
+        }
+        else
+        {
+            Plaintxt = 'No pending leads to contact for today';
+        }
+        String Subject = 'About the todays lead status';
+        List<string> EmailId = new List<String>{'jokuldinesh0@gmail.com','pravinvenkat24@gmail.com'};
+        
+        Emailutil.emailmsg(EmailId , Subject , Plaintxt);
+    }
+
+}
