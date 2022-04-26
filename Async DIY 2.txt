@@ -1,0 +1,18 @@
+public class ContactHandlerTrigger 
+{
+    @Future
+    Public Static Void FutureMethod()
+    {
+        List<Account> AccConLst = New List<Account> ([Select Id, Name, Number_of_Contacts__c,
+                                                      (Select Id, LastName from Contacts)
+                                                      from Account]);
+        For(Account Acc : AccConLst)
+        {
+            Acc.Number_of_Contacts__c = Acc.contacts.size();
+        }
+        Update AccConLst;
+        
+    }
+}
+
+
