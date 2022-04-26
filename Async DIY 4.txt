@@ -1,0 +1,70 @@
+public class BatchDiy4 implements Database.Batchable<sobject>,database.stateful
+{
+    public integer count=0;
+    Public Database.QueryLocator start (database.BatchableContext ABC)
+    {
+        system.debug('Start Called');
+        return database.getQueryLocator([select id , name,status,createdDate from Lead]);
+    }
+    public  void execute (Database.Batchablecontext ABC , List<Lead> Batch)
+    {
+        system.debug('Execute Called');
+        List<Lead>Leadlst = new List<Lead> ();
+        for(Lead Leadrec : Batch)
+        {
+            If( (Date.Today().Month() - Leadrec.createdDate.month()) > 6
+               && 
+               (Leadrec.status != 'Closed Won') && (Leadrec.status != 'Closed Lost'))  //'AAA','BBB'
+            {
+                Leadrec.status = 'closed Lost'; 
+            }
+           Leadlst.add(Leadrec);
+        }
+        Update Leadlst;
+        count+=1;
+        
+    }
+    public void finish (Database.BatchableContext ABC)
+    {
+        Id Jobid = ABC.getJobId();
+        Asyncapexjob Job = [select id, createdById, createdBy.email,status from Asyncapexjob where id =:Jobid ];
+        system.debug('Finish Called');
+        system.debug('No of badges executed '+ count);
+        
+        list<messaging.SingleEmailMessage> msg = new list<messaging.SingleEmailMessage>();
+        messaging.SingleEmailMessage Emailmsg = New messaging.SingleEmailMessage();
+        Emailmsg.ToAddresses= new string[]{Job.createdBy.email};
+        Emailmsg.subject = 'JOB completed';
+        Emailmsg.plaintextbody = ' Hello the  batch job has been '+Job.Status;
+        
+        msg.add(Emailmsg);
+        
+        
+        Messaging.SendEmailResult[] results = Messaging.SendEmail(msg); 
+        if (results[0].success){
+            system.debug('sent');
+        }
+        else{
+            system.debug('unable to send');
+        }
+        
+    }
+}
+
+
+========================================================================================================================
+
+
+public class Emailutil {
+    public static void emailmsg(List<String> EmailId, string Subject, string Plaintxt)
+    {
+        Messaging.SingleEmailMessage Mail = new  messaging.SingleEmailMessage();
+        Mail.setToAddresses(EmailId);
+        Mail.subject = Subject;
+        Mail.setPlainTextBody(Plaintxt);
+        Messaging.SingleEmailMessage[] SendEmail = new list <Messaging.SingleEmailMessage>{Mail};
+        Messaging.SendEmailResult[]Results =  Messaging.sendEmail(SendEmail);
+        system.debug(Results);
+    }
+
+}
